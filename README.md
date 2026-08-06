@@ -1,4 +1,4 @@
-# AI Coding Assistant & Chatbot
+# Apply
 
 Fine-tuning a lightweight LLM (1B-3B params) with LoRA/QLoRA for coding + general chat.
 Designed to run on CPU with GGUF export.
