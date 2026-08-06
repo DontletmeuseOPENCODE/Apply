@@ -1,0 +1,6 @@
+Python 3.10+
+__pycache__/
+*.py[cod]
+logs/
+outputs/
+data/*.bin

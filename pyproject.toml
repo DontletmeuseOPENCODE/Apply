@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "fine-tune-ai"
+version = "0.1.0"
+description = "Lightweight LLM fine-tuning for coding and general chat"
+authors = ["szym"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+torch = { extras = ["cpu"], version = "^2.2.0" }
+transformers = "^4.38.0"
+datasets = "^2.18.0"
+peft = "^0.8.0"
+trl = "^0.8.0"
+bitsandbytes = "^0.42.0"
+accelerate = "^0.27.0"
+sentencepiece = "^0.1.99"
+protobuf = "^4.25.0"
+optimum = "^1.17.0"
+hqq = "^0.1.0"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.0"
+jupyter = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
