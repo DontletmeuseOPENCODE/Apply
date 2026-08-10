@@ -10,6 +10,8 @@ Commands:  type 'quit' or 'exit' to leave, 'clear' to reset history.
 import argparse
 import os
 import sys
+import time
+import traceback
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -58,7 +60,21 @@ def generate(tokenizer, model, history, system):
         )
     new_tokens = output[0][input_len:]
     answer = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
-    return answer
+    return answer, input_len, len(new_tokens)
+
+
+def ask_dev_mode():
+    print("=" * 50)
+    print("  Apply - AI Coding Assistant")
+    print("=" * 50)
+    choice = input("Enable Dev Mode? Shows errors, token counts, timing. (y/n): ").strip().lower()
+    dev = choice in ("y", "yes", "tak", "1")
+    if dev:
+        print("[Dev Mode: ON]")
+    else:
+        print("[Dev Mode: OFF]")
+    print("  Commands: 'quit' to exit | 'clear' to reset | 'dev' to toggle\n")
+    return dev
 
 
 def main():
@@ -72,11 +88,16 @@ def main():
 
     tokenizer, model = load_model()
     history = []
+    dev_mode = ask_dev_mode()
 
-    print("=" * 50)
-    print("  Apply - AI Coding Assistant")
-    print("  Commands: 'quit' to exit | 'clear' to reset")
-    print("=" * 50 + "\n")
+    if dev_mode:
+        import psutil
+        mem = psutil.virtual_memory()
+        param_count = sum(p.numel() for p in model.parameters())
+        print(f"[DEV] Model params: {param_count / 1e6:.1f}M")
+        print(f"[DEV] RAM: {mem.used / 1e9:.1f} / {mem.total / 1e9:.1f} GB")
+        print(f"[DEV] CPU threads: {os.cpu_count()}")
+        print()
 
     while True:
         try:
@@ -94,12 +115,34 @@ def main():
             history.clear()
             print("[History cleared]\n")
             continue
+        if user_input.lower() == "dev":
+            dev_mode = not dev_mode
+            print(f"[Dev Mode: {'ON' if dev_mode else 'OFF'}]\n")
+            continue
 
         history.append(("user", user_input))
         print("Assistant> ", end="", flush=True)
-        reply = generate(tokenizer, model, history, args.system)
-        print(reply + "\n")
-        history.append(("assistant", reply))
+
+        try:
+            t0 = time.time()
+            reply, in_tokens, out_tokens = generate(tokenizer, model, history, args.system)
+            elapsed = time.time() - t0
+            print(reply + "\n")
+
+            if dev_mode:
+                print(f"  [DEV] input tokens: {in_tokens} | output tokens: {out_tokens}")
+                print(f"  [DEV] time: {elapsed:.2f}s | tokens/s: {out_tokens / elapsed:.1f}")
+                mem = psutil.virtual_memory()
+                print(f"  [DEV] RAM: {mem.used / 1e9:.1f} / {mem.total / 1e9:.1f} GB ({mem.percent}%)")
+                print()
+
+            history.append(("assistant", reply))
+
+        except Exception as e:
+            print(f"[ERROR] {e}\n")
+            if dev_mode:
+                traceback.print_exc()
+                print()
 
 
 if __name__ == "__main__":
