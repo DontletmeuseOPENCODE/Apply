@@ -47,6 +47,7 @@ def build_prompt(history, system):
 def generate(tokenizer, model, history, system):
     text = build_prompt(history, system)
     inputs = tokenizer(text, return_tensors="pt")
+    input_len = inputs["input_ids"].shape[1]
     with torch.no_grad():
         output = model.generate(
             **inputs,
@@ -55,11 +56,8 @@ def generate(tokenizer, model, history, system):
             do_sample=True,
             pad_token_id=tokenizer.eos_token_id,
         )
-    full = tokenizer.decode(output[0], skip_special_tokens=True)
-    answer = full.split("<|assistant|>")[-1].strip()
-    end = answer.find("<|end|>")
-    if end != -1:
-        answer = answer[:end].strip()
+    new_tokens = output[0][input_len:]
+    answer = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
     return answer
 
 

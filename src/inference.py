@@ -43,6 +43,7 @@ def chat(prompt, system="You are a helpful coding and technical assistant."):
     inputs = tokenizer(text, return_tensors="pt")
 
     print("Generating...", flush=True)
+    input_len = inputs["input_ids"].shape[1]
     with torch.no_grad():
         output = model.generate(
             **inputs,
@@ -52,8 +53,8 @@ def chat(prompt, system="You are a helpful coding and technical assistant."):
             pad_token_id=tokenizer.eos_token_id,
         )
 
-    response = tokenizer.decode(output[0], skip_special_tokens=True)
-    answer = response.split("<|assistant|>")[-1].strip()
+    new_tokens = output[0][input_len:]
+    answer = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
     return answer
 
 
