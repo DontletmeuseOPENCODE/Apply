@@ -39,11 +39,15 @@ def format_prompt(prompt, system="You are a helpful coding and technical assista
 
 def chat(prompt, system="You are a helpful coding and technical assistant."):
     tokenizer, model = load_model()
-    text = format_prompt(prompt, system)
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": prompt},
+    ]
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(text, return_tensors="pt")
+    input_len = inputs["input_ids"].shape[1]
 
     print("Generating...", flush=True)
-    input_len = inputs["input_ids"].shape[1]
     with torch.no_grad():
         output = model.generate(
             **inputs,

@@ -39,15 +39,15 @@ def load_model():
 
 
 def build_prompt(history, system):
-    prompt = f"<|system|>\n{system}\n<|end|>\n"
+    messages = [{"role": "system", "content": system}]
     for role, content in history:
-        prompt += f"<|{role}|>\n{content}\n<|end|>\n"
-    prompt += "<|assistant|>\n"
-    return prompt
+        messages.append({"role": role, "content": content})
+    return messages
 
 
 def generate(tokenizer, model, history, system):
-    text = build_prompt(history, system)
+    messages = build_prompt(history, system)
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(text, return_tensors="pt")
     input_len = inputs["input_ids"].shape[1]
     with torch.no_grad():
