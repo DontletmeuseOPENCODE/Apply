@@ -1,0 +1,49 @@
+name: Upload Model to HuggingFace Hub
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install transformers peft accelerate sentencepiece protobuf huggingface_hub
+
+      - name: Load and merge LoRA adapters
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python src/export.py
+
+      - name: Upload to HuggingFace Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python - <<'EOF'
+          from huggingface_hub import HfApi
+          import os
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          repo_id = os.environ.get("HF_REPO_ID", "DontletmeuseOPENCODE/Apply")
+
+          api.create_repo(repo_id=repo_id, exist_ok=True, repo_type="model")
+          api.upload_folder(
+              folder_path="outputs/Apply-model",
+              repo_id=repo_id,
+              commit_message=f"Upload Apply model from CI",
+          )
+          print(f"Model uploaded to https://huggingface.co/{repo_id}")
+          EOF
