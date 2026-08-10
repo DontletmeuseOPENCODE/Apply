@@ -16,6 +16,7 @@ import traceback
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import torch
+import psutil
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 MODEL_PATH = "outputs/Apply-model"
@@ -92,7 +93,6 @@ def main():
     dev_mode = ask_dev_mode()
 
     if dev_mode:
-        import psutil
         mem = psutil.virtual_memory()
         param_count = sum(p.numel() for p in model.parameters())
         print(f"[DEV] Model params: {param_count / 1e6:.1f}M")
