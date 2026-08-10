@@ -34,6 +34,7 @@ def load_model():
         dtype=torch.float32,
         device_map="cpu",
     )
+    model.generation_config.max_length = None
     print("Model ready!\n")
     return tokenizer, model
 

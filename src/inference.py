@@ -23,9 +23,10 @@ def load_model():
     tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(
         path,
-        torch_dtype=torch.float32,
+        dtype=torch.float32,
         device_map="cpu",
     )
+    model.generation_config.max_length = None
     return tokenizer, model
 
 
