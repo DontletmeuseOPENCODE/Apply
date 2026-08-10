@@ -9,7 +9,7 @@ import sys
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-MODEL_PATH = "outputs/merged-model"
+MODEL_PATH = "outputs/Apply-model"
 FALLBACK_MODEL = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 MAX_TOKENS = 256
 
@@ -17,7 +17,8 @@ MAX_TOKENS = 256
 def load_model():
     import os
     path = MODEL_PATH if os.path.exists(MODEL_PATH) else FALLBACK_MODEL
-    print(f"Loading model from: {path}")
+    label = "Apply" if os.path.exists(MODEL_PATH) else "Apply (base: TinyLlama, not yet trained)"
+    print(f"Loading model: {label}")
     tokenizer = AutoTokenizer.from_pretrained(path, use_fast=True)
     tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(

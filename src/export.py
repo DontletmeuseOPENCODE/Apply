@@ -10,9 +10,9 @@ from peft import PeftModel
 
 BASE_MODEL = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 ADAPTER_PATH = "outputs/lora-adapters"
-MERGED_PATH = "outputs/merged-model"
+MERGED_PATH = "outputs/Apply-model"
 
-print("Loading base model...")
+print("Loading base model (TinyLlama 1.1B) to build Apply...")
 tokenizer = AutoTokenizer.from_pretrained(ADAPTER_PATH, use_fast=True)
 tokenizer.pad_token = tokenizer.eos_token
 
@@ -29,7 +29,7 @@ model = PeftModel.from_pretrained(base_model, ADAPTER_PATH)
 print("Merging adapters into base model...")
 merged = model.merge_and_unload()
 
-print(f"Saving merged model to {MERGED_PATH}...")
+print(f"Saving merged model as 'Apply' to {MERGED_PATH}...")
 merged.save_pretrained(MERGED_PATH)
 tokenizer.save_pretrained(MERGED_PATH)
-print("Done!")
+print("Done! Your 'Apply' model is ready!")

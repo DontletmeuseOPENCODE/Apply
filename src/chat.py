@@ -16,14 +16,15 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-MODEL_PATH = "outputs/merged-model"
+MODEL_PATH = "outputs/Apply-model"
 FALLBACK_MODEL = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 MAX_TOKENS = 256
 
 
 def load_model():
     path = MODEL_PATH if os.path.exists(MODEL_PATH) else FALLBACK_MODEL
-    print(f"Loading model from: {path} ...", flush=True)
+    trained = os.path.exists(MODEL_PATH)
+    print(f"Loading model: Apply" + ("" if trained else " (base: TinyLlama, not yet trained)") + " ...", flush=True)
     tokenizer = AutoTokenizer.from_pretrained(path, use_fast=True)
     tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(
@@ -75,7 +76,7 @@ def main():
     history = []
 
     print("=" * 50)
-    print("  AI Coding Assistant - Interactive Chat")
+    print("  Apply - AI Coding Assistant")
     print("  Commands: 'quit' to exit | 'clear' to reset")
     print("=" * 50 + "\n")
 
