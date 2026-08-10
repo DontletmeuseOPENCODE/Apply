@@ -9,7 +9,7 @@ import sys
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-MODEL_PATH = "outputs/merged-model"
+MODEL_PATH = "outputs/Apply-model"
 FALLBACK_MODEL = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 MAX_TOKENS = 256
 
@@ -17,14 +17,16 @@ MAX_TOKENS = 256
 def load_model():
     import os
     path = MODEL_PATH if os.path.exists(MODEL_PATH) else FALLBACK_MODEL
-    print(f"Loading model from: {path}")
+    label = "Apply" if os.path.exists(MODEL_PATH) else "Apply (base: TinyLlama, not yet trained)"
+    print(f"Loading model: {label}")
     tokenizer = AutoTokenizer.from_pretrained(path, use_fast=True)
     tokenizer.pad_token = tokenizer.eos_token
     model = AutoModelForCausalLM.from_pretrained(
         path,
-        torch_dtype=torch.float32,
+        dtype=torch.float32,
         device_map="cpu",
     )
+    model.generation_config.max_length = None
     return tokenizer, model
 
 
@@ -38,8 +40,13 @@ def format_prompt(prompt, system="You are a helpful coding and technical assista
 
 def chat(prompt, system="You are a helpful coding and technical assistant."):
     tokenizer, model = load_model()
-    text = format_prompt(prompt, system)
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": prompt},
+    ]
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(text, return_tensors="pt")
+    input_len = inputs["input_ids"].shape[1]
 
     print("Generating...", flush=True)
     with torch.no_grad():
@@ -51,8 +58,8 @@ def chat(prompt, system="You are a helpful coding and technical assistant."):
             pad_token_id=tokenizer.eos_token_id,
         )
 
-    response = tokenizer.decode(output[0], skip_special_tokens=True)
-    answer = response.split("<|assistant|>")[-1].strip()
+    new_tokens = output[0][input_len:]
+    answer = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
     return answer
 
 
